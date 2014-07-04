@@ -56,7 +56,9 @@ public class Packr {
 		public Platform platform;
 		public String jdk;
 		public String executable;
+		public String iconResource;
 		public String jar;
+		public String bundleIdentifier = "com.yourcompany.identifier";
 		public String mainClass;
 		public List<String> vmArgs = new ArrayList<String>();
 		public String[] minimizeJre;
@@ -81,16 +83,23 @@ public class Packr {
 		
 		Map<String, String> values = new HashMap<String, String>();
 		values.put("${executable}", config.executable);
-		values.put("${bundleIdentifier}", "com.yourcompany.identifier"); // FIXME add as a param
-		
+		values.put("${bundleIdentifier}", config.bundleIdentifier);
+
 		// if this is a mac build, let's create the app bundle structure
 		if(config.platform == Platform.mac) {
 			new File(out, "Contents").mkdirs();
 			FileUtils.writeStringToFile(new File(out, "Contents/Info.plist"), readResourceAsString("/Info.plist", values));
 			target = new File(out, "Contents/MacOS");
 			target.mkdirs();
-			new File(out, "Contents/Resources").mkdirs();
-			// FIXME copy icons
+			File resources = new File(out, "Contents/Resources");
+			resources.mkdirs();
+			if(config.iconResource != null) {
+				// copy icons to Contents/Resources/icons.icns
+				File icons = new File(config.iconResource);
+				if(icons.exists()) {
+					FileUtils.copyFile(new File(config.iconResource), new File(resources, "icons.icns"));
+				}
+			}
 		}
 		
 		// write jar, exe and config to target folder
@@ -279,8 +288,12 @@ public class Packr {
 			config.platform = Platform.valueOf(arguments.get("platform"));
 			config.jdk = arguments.get("jdk");
 			config.executable = arguments.get("executable");
+			config.iconResource = arguments.get("icons");
 			config.jar = arguments.get("appjar");
 			config.mainClass = arguments.get("mainclass");
+			if(arguments.get("bundleIdentifier") != null) {
+				config.bundleIdentifier = arguments.get("bundleIdentifier");
+			}
 			if(arguments.get("vmargs") != null) {
 				config.vmArgs = Arrays.asList(arguments.get("vmargs").split(";"));
 			}
@@ -309,8 +322,14 @@ public class Packr {
 				config.platform = Platform.valueOf(json.get("platform").asString());
 				config.jdk = json.get("jdk").asString();
 				config.executable = json.get("executable").asString();
+				if(json.get("icons") != null) {
+					config.iconResource = json.get("icons").asString();
+				}
 				config.jar = json.get("appjar").asString();
 				config.mainClass = json.get("mainclass").asString();
+				if(json.get("bundleIdentifier") != null) {
+					config.bundleIdentifier = json.get("bundleIdentifier").asString();
+				}
 				if(json.get("vmargs") != null) {
 					for(JsonValue val: json.get("vmargs").asArray()) {
 						config.vmArgs.add(val.asString());
@@ -357,8 +376,10 @@ public class Packr {
 		System.out.println("-jdk <path-or-url>                   ... path to a JDK to be bundled (needs to fit platform).");
 		System.out.println("                                         Can be a ZIP file or URL to a ZIP file");
 		System.out.println("-executable <name>                   ... name of the executable, e.g. 'mygame', without extension");
+		System.out.println("-icons <file>                        ... file containing icon resources (optional, needs to fit platform)");
 		System.out.println("-appjar <file>                       ... JAR file containing code and assets to be packed");
 		System.out.println("-mainclass <main-class>              ... fully qualified main class name, e.g. com/badlogic/MyApp");
+		System.out.println("-bundleIdentifier <identifier>       ... bundle identifier, e.g. com.badlogic (optional)");
 		System.out.println("-vmargs <args>                       ... arguments passed to the JVM, e.g. -Xmx1G, separated by ;");
 		System.out.println("-minimizejre <configfile>            ... minimize the JRE by removing folders and files specified in the config file");
 		System.out.println("                                         three config files come with packr: 'soft' and 'hard' which may or may not break your app");
