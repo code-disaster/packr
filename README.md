@@ -12,8 +12,10 @@ java -jar packr.jar \
      -platform mac \
      -jdk "openjdk-1.7.0-u45-unofficial-icedtea-2.4.3-macosx-x86_64-image.zip" \
      -executable myapp \
+     -icons myapp.icns \
      -appjar myapp.jar \
      -mainclass "com/my/app/MainClass" \
+     -bundleIdentifier "com.my.app" \
      -vmargs "-Xmx1G" \
      -resources pom.xml;src/main/resources \
      -minimizejre "soft" \
@@ -25,8 +27,10 @@ java -jar packr.jar \
 | platform | one of "windows", "linux32", "linux64", "mac" |
 | jdk | ZIP file location or URL to an OpenJDK build containing a JRE. Prebuild JDKs can be found at https://github.com/alexkasko/openjdk-unofficial-builds |
 | executable | name of the native executable, without extension such as ".exe" |
+| icons | (optional) file location of platform dependent icon resources |
 | appjar | file location of the JAR to package |
 | mainclass | the fully qualified name of the main class, using forward slashes to delimit package names |
+| bundleIdentifier | (optional) application bundle identifier, e.g. "com.badlogicgames.packr" |
 | vmargs | list of arguments for the JVM, separated by `;`, e.g. "-Xmx1G" |
 | outdir | output directory |
 | resources (optional) | list of files and directories to be packaged next to the native executable, separated by `;`.
@@ -40,8 +44,10 @@ Alternatively, you can put all the command line arguments into a JSON file which
     "platform": "mac",
     "jdk": "/Users/badlogic/Downloads/openjdk-1.7.0-u45-unofficial-icedtea-2.4.3-macosx-x86_64-image.zip",
     "executable": "myapp",
+    "icons": "myapp.icns",
     "appjar": "myapp.jar",
     "mainclass": "com/my/app/MainClass",
+    "bundleIdentifier": "com.my.app",
     "vmargs": [
        "-Xmx1G"
     ],
@@ -75,10 +81,12 @@ To invoke packr, you need to create an instance of `Config` and pass it to `Pack
 ```java
 Config config = new Config();
 config.platform = Platform.windows;
-config.jdk = "/User/badlogic/Downloads/openjdk-for-mac.zip";
+config.jdk = "/User/badlogic/Downloads/openjdk-for-windows.zip";
 config.executable = "myapp";
+config.icons = "myapp.ico";
 config.jar = "myjar.jar";
 config.mainClass = "com/my/app/MainClass";
+config.bundleIdentifier = "com.my.app";
 config.vmArgs = Arrays.asList("-Xmx1G");
 config.minimizeJre = new String[] { "jre/lib/rt/com/sun/corba", "jre/lib/rt/com/sun/jndi" };
 config.outDir = "out-mac";
@@ -136,9 +144,10 @@ outdir/
          config.json
          jre/
       Resources/
+         icons.icns
 ```
 
-You can futher modify the Info.plist to your liking, e.g. add icons, a bundle identifier etc. If your `outdir` has the `.app` extension it will be treated as an application bundle by Mac OS X.
+You can further modify the Info.plist to your liking, e.g. manually add icons, a bundle identifier etc. If your `outdir` has the `.app` extension it will be treated as an application bundle by Mac OS X.
 
 ## Building
 
@@ -154,7 +163,6 @@ If you want to compile the exe files used by packr, install premake, Visual Stud
 
 ## Limitations
 
-  * Icons aren't set yet on any platform, need to do that manually.
   * Windows is 32-bit only, Mac OS X is 64-bit only
   * JRE minimization is very conservative, depending on your app, you can carve out stuff from a JRE yourself, disable minimization and pass your custom JRE to packr
  

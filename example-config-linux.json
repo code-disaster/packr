@@ -4,6 +4,7 @@
     "executable": "myapp",
     "appjar": "target/packr-1.1-SNAPSHOT.jar",
     "mainclass": "com/badlogicgames/packr/TestApp",
+    "bundleIdentifier": "com.badlogicgames.packr",
     "vmargs": [
     	"-Xmx1G"
     ],
