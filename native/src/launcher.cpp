@@ -22,7 +22,6 @@
 
 #ifdef MACOSX
 #include <unistd.h>
-extern char** environ;
 #endif
 
 #include <launcher.h>
@@ -39,6 +38,12 @@ extern int g_argc;
 extern char** g_argv;
 
 typedef jint (JNICALL *PtrCreateJavaVM)(JavaVM **, void **, void *);
+
+static char* copyStdString(std::string source) {
+    char* target = (char*)malloc(source.length() + 1);
+    strncpy(target, source.c_str(), source.length() + 1);
+    return target;
+}
 
 static PtrCreateJavaVM loadJavaVM(std::string execDir) {
 
@@ -73,9 +78,9 @@ static PtrCreateJavaVM loadJavaVM(std::string execDir) {
 
 static void launchVMWithJNI(PtrCreateJavaVM ptrCreateJavaVM, std::string main, std::string classPath, picojson::array vmArgs) {
     JavaVMOption* options = (JavaVMOption*)malloc(sizeof(JavaVMOption) * (1 + vmArgs.size()));
-    options[0].optionString = (char*)classPath.c_str();
-    for(unsigned i = 0; i < vmArgs.size(); i++) {
-        options[i+1].optionString = (char*)vmArgs[i].to_str().c_str();
+    options[0].optionString = copyStdString(classPath);
+    for(int i = 0; i < vmArgs.size(); i++) {
+        options[i+1].optionString = copyStdString(vmArgs[i].to_str());
         printf("vmArg %d: %s\n", i, options[i+1].optionString);
     }
     
@@ -108,28 +113,40 @@ static void launchVMWithJNI(PtrCreateJavaVM ptrCreateJavaVM, std::string main, s
     }
     env->CallStaticVoidMethod(mainClass, mainMethod, appArgs);
     jvm->DestroyJavaVM();
+
+    for(int i = 0; i < args.nOptions; i++) {
+        free(options[i].optionString);
+    }
+    free(options);
 }
 
 static void launchVMWithExec(std::string main, std::string jarFile, picojson::array vmArgs) {
-    char** args = (char**)malloc(3 + vmArgs.size() + 1);
+    char** args = (char**)malloc(vmArgs.size() + 4);
+    int numVMArgs = vmArgs.size();
 
-    args[0] = (char*)std::string("java").c_str();
+    args[0] = copyStdString(std::string("java"));
 
-    for(unsigned i = 0; i < vmArgs.size(); i++) {
-        args[i+1] = (char*)vmArgs[i].to_str().c_str();
-        printf("vmArg %d: %s\n", i, args[i+1]);
+    for(int i = 0; i < numVMArgs; i++) {
+        args[i+1] = copyStdString(vmArgs[i].to_str());
     }
 
-    args[vmArgs.size()+1] = (char*)std::string("-jar").c_str();
-    args[vmArgs.size()+2] = (char*)jarFile.c_str();
-    args[vmArgs.size()+3] = NULL;
+    args[numVMArgs+1] = copyStdString(std::string("-jar"));
+    args[numVMArgs+2] = copyStdString(jarFile);
+    args[numVMArgs+3] = NULL;
+
+    printf("command line:");
+    for(int i = 0; i < numVMArgs+3; i++) {
+        printf(" %s", args[i]);
+    }
+    printf("\n");
 
 #ifndef WINDOWS
-    char** env = environ;
-
-    execve("jre/bin/java", args, env);
+    execv("jre/bin/java", args);
 #endif
     
+    for(int i = 0; i < numVMArgs + 4; i++) {
+        free(args[i]);
+    }
     free(args);
 }
 
