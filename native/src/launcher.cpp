@@ -114,14 +114,15 @@ static void launchVMWithExec(std::string main, std::string jarFile, picojson::ar
     char** args = (char**)malloc(3 + vmArgs.size() + 1);
 
     args[0] = (char*)std::string("java").c_str();
-    args[1] = (char*)std::string("-jar").c_str();
-    args[2] = (char*)jarFile.c_str();
-    args[3 + vmArgs.size()] = NULL;
 
     for(unsigned i = 0; i < vmArgs.size(); i++) {
-        args[i+3] = (char*)vmArgs[i].to_str().c_str();
-        printf("vmArg %d: %s\n", i, args[i+3]);
+        args[i+1] = (char*)vmArgs[i].to_str().c_str();
+        printf("vmArg %d: %s\n", i, args[i+1]);
     }
+
+    args[vmArgs.size()+1] = (char*)std::string("-jar").c_str();
+    args[vmArgs.size()+2] = (char*)jarFile.c_str();
+    args[vmArgs.size()+3] = NULL;
 
 #ifndef WINDOWS
     char** env = environ;
