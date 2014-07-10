@@ -18,9 +18,6 @@
 #include <windows.h>
 #else
 #include <dlfcn.h>
-#endif
-
-#ifdef MACOSX
 #include <unistd.h>
 #endif
 
@@ -41,7 +38,11 @@ typedef jint (JNICALL *PtrCreateJavaVM)(JavaVM **, void **, void *);
 
 static char* copyStdString(std::string source) {
     char* target = (char*)malloc(source.length() + 1);
+#ifdef WINDOWS
+    strncpy_s(target, source.length() + 1, source.c_str(), source.length() + 1);
+#else
     strncpy(target, source.c_str(), source.length() + 1);
+#endif
     return target;
 }
 
@@ -79,7 +80,7 @@ static PtrCreateJavaVM loadJavaVM(std::string execDir) {
 static void launchVMWithJNI(PtrCreateJavaVM ptrCreateJavaVM, std::string main, std::string classPath, picojson::array vmArgs) {
     JavaVMOption* options = (JavaVMOption*)malloc(sizeof(JavaVMOption) * (1 + vmArgs.size()));
     options[0].optionString = copyStdString(classPath);
-    for(int i = 0; i < vmArgs.size(); i++) {
+    for(unsigned int i = 0; i < vmArgs.size(); i++) {
         options[i+1].optionString = copyStdString(vmArgs[i].to_str());
         printf("vmArg %d: %s\n", i, options[i+1].optionString);
     }
@@ -122,11 +123,11 @@ static void launchVMWithJNI(PtrCreateJavaVM ptrCreateJavaVM, std::string main, s
 
 static void launchVMWithExec(std::string main, std::string jarFile, picojson::array vmArgs) {
     char** args = (char**)malloc(vmArgs.size() + 4);
-    int numVMArgs = vmArgs.size();
+    unsigned int numVMArgs = vmArgs.size();
 
     args[0] = copyStdString(std::string("java"));
 
-    for(int i = 0; i < numVMArgs; i++) {
+    for(unsigned int i = 0; i < numVMArgs; i++) {
         args[i+1] = copyStdString(vmArgs[i].to_str());
     }
 
@@ -135,7 +136,7 @@ static void launchVMWithExec(std::string main, std::string jarFile, picojson::ar
     args[numVMArgs+3] = NULL;
 
     printf("command line:");
-    for(int i = 0; i < numVMArgs+3; i++) {
+    for(unsigned int i = 0; i < numVMArgs+3; i++) {
         printf(" %s", args[i]);
     }
     printf("\n");
@@ -144,7 +145,7 @@ static void launchVMWithExec(std::string main, std::string jarFile, picojson::ar
     execv("jre/bin/java", args);
 #endif
     
-    for(int i = 0; i < numVMArgs + 4; i++) {
+    for(unsigned int i = 0; i < numVMArgs + 4; i++) {
         free(args[i]);
     }
     free(args);
