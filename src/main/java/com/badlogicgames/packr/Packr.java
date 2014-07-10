@@ -94,9 +94,9 @@ public class Packr {
 			File resources = new File(out, "Contents/Resources");
 			resources.mkdirs();
 			if(config.iconResource != null) {
-				// copy icons to Contents/Resources/icons.icns
 				File icons = new File(config.iconResource);
 				if(icons.exists()) {
+					// copy application bundle icons to Contents/Resources/icons.icns
 					FileUtils.copyFile(new File(config.iconResource), new File(resources, "icons.icns"));
 				}
 			}
@@ -194,6 +194,13 @@ public class Packr {
 			FileUtils.deleteDirectory(new File(outDir, "jre/bin/client"));
 			for(File file: new File(outDir, "jre/bin").listFiles()) {
 				if(file.getName().endsWith(".exe")) file.delete();
+			}
+		} else if (config.platform == Platform.mac) {
+			for(File file: new File(outDir, "jre/bin").listFiles()) {
+				if(file.getName().equals("java"))
+					file.setExecutable(true, false);
+				else
+					file.delete();
 			}
 		} else {
 			FileUtils.deleteDirectory(new File(outDir, "jre/bin"));
