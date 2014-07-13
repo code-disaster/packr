@@ -36,16 +36,6 @@ extern char** g_argv;
 
 typedef jint (JNICALL *PtrCreateJavaVM)(JavaVM **, void **, void *);
 
-static char* copyStdString(std::string source) {
-    char* target = (char*)malloc(source.length() + 1);
-#ifdef WINDOWS
-    strncpy_s(target, source.length() + 1, source.c_str(), source.length() + 1);
-#else
-    strncpy(target, source.c_str(), source.length() + 1);
-#endif
-    return target;
-}
-
 static PtrCreateJavaVM loadJavaVM(std::string execDir) {
 
 #ifndef WINDOWS
@@ -77,11 +67,11 @@ static PtrCreateJavaVM loadJavaVM(std::string execDir) {
     return ptrCreateJavaVM;
 }
 
-static void launchVMWithJNI(PtrCreateJavaVM ptrCreateJavaVM, std::string main, std::string classPath, picojson::array vmArgs) {
+static void launchVMWithJNI(PtrCreateJavaVM ptrCreateJavaVM, const std::string& main, const std::string& classPath, const picojson::array& vmArgs) {
     JavaVMOption* options = (JavaVMOption*)malloc(sizeof(JavaVMOption) * (1 + vmArgs.size()));
-    options[0].optionString = copyStdString(classPath);
+    options[0].optionString = strdup(classPath.c_str());
     for(unsigned int i = 0; i < vmArgs.size(); i++) {
-        options[i+1].optionString = copyStdString(vmArgs[i].to_str());
+        options[i+1].optionString = strdup(vmArgs[i].to_str().c_str());
         printf("vmArg %d: %s\n", i, options[i+1].optionString);
     }
     
@@ -121,18 +111,18 @@ static void launchVMWithJNI(PtrCreateJavaVM ptrCreateJavaVM, std::string main, s
     free(options);
 }
 
-static void launchVMWithExec(std::string main, std::string jarFile, picojson::array vmArgs) {
-    char** args = (char**)malloc(vmArgs.size() + 4);
+static void launchVMWithExec(const std::string& main, const std::string& jarFile, const picojson::array& vmArgs) {
     unsigned int numVMArgs = vmArgs.size();
+    char** args = (char**)malloc((numVMArgs + 4) * sizeof(char*));
 
-    args[0] = copyStdString(std::string("java"));
+    args[0] = strdup("java");
 
     for(unsigned int i = 0; i < numVMArgs; i++) {
-        args[i+1] = copyStdString(vmArgs[i].to_str());
+        args[i+1] = strdup(vmArgs[i].to_str().c_str());
     }
 
-    args[numVMArgs+1] = copyStdString(std::string("-jar"));
-    args[numVMArgs+2] = copyStdString(jarFile);
+    args[numVMArgs+1] = strdup("-jar");
+    args[numVMArgs+2] = strdup(jarFile.c_str());
     args[numVMArgs+3] = NULL;
 
     printf("command line:");
