@@ -25,17 +25,40 @@
 
 std::string getExecutableDir() {
 	char dest[PATH_MAX];
-
-	if (readlink("/proc/self/exe", dest, PATH_MAX) == -1)
+	int result = readlink("/proc/self/exe", dest, PATH_MAX - 1);
+	if (result == -1) {
 		return std::string(".");
-	else {
+	} else {
+		dest[result] = 0;
 		strrchr(dest, '/')[0] = 0;
 		return std::string(dest);
 	}
 }
 
 bool changeWorkingDir(std::string dir) {
-    return chdir(dir.c_str()) == 0;
+	return chdir(dir.c_str()) == 0;
+}
+
+std::string getJavaHomeDir() {
+    FILE* fp = popen("/bin/readlink -f /usr/bin/java | sed \"s:/jre/bin/java::\"", "r");
+    if (fp == NULL) {
+        return std::string("");
+    }
+
+    char buf[PATH_MAX];
+    std::string output;
+    while (fgets(buf, sizeof(buf) - 1, fp) != NULL) {
+        output.append(buf);
+    }
+
+    size_t pos = 0;
+    while ((pos = output.find("\n")) != std::string::npos) {
+        output.erase(pos, 1);
+    }
+
+    printf("System JRE: %s\n", output.c_str());
+
+    return output;
 }
 
 int g_argc;

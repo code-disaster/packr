@@ -14,6 +14,6 @@ solution "packr"
 		defines { "MACOSX" }
 		includedirs { "include/jni-headers/mac" }
 		files { "src/main-mac.cpp" }
-		linkoptions { "-framework CoreFoundation", "-mmacosx-version-min=10.6" }
+		linkoptions { "-framework CoreFoundation", "-framework CoreServices", "-mmacosx-version-min=10.6" }
 
 		platforms { "native" }

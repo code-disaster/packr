@@ -30,12 +30,49 @@
 
 extern std::string getExecutableDir();
 extern bool changeWorkingDir(std::string dir);
+extern std::string getJavaHomeDir();
 extern int g_argc;
 extern char** g_argv;
 
+#ifdef MACOSX
+extern bool requiresSystemJRE();
+#endif
+
 typedef jint (JNICALL *PtrCreateJavaVM)(JavaVM **, void **, void *);
 
+static bool ignoreBundleJre = false;
+
+static void removeArg(int arg) {
+    for(int i = arg; i < g_argc - 2; i++) {
+        g_argv[i] = g_argv[i - 1];
+    }
+    g_argc--;
+}
+
+void filterArgs() {
+    int arg = 0;
+    while(arg < g_argc) {
+        if(strcmp(g_argv[arg], "--use-system-jre") == 0) {
+            ignoreBundleJre = true;
+            removeArg(arg);
+        } else {
+            arg++;
+        }
+    }
+
+#ifdef MACOSX
+    if (!ignoreBundleJre) {
+        if (requiresSystemJRE()) {
+            printf("OS X 10.6 or older detected, switching to system JRE.\n");
+            ignoreBundleJre = true;
+        }
+    }
+#endif
+}
+
 void* launchVM(void* params) {
+    filterArgs();
+
     std::string execDir = getExecutableDir();
     std::ifstream configFile;
     configFile.open((execDir + std::string("/config.json")).c_str());
@@ -74,14 +111,14 @@ void* launchVM(void* params) {
 
 #ifndef WINDOWS
     #ifdef MACOSX
-        std::string jre = execDir + std::string("/jre/lib/server/libjvm.dylib");
+        std::string jre = (ignoreBundleJre ? getJavaHomeDir() : execDir) + std::string("/jre/lib/server/libjvm.dylib");
     #elif defined(__LP64__)
-        std::string jre = execDir + std::string("/jre/lib/amd64/server/libjvm.so");
+        std::string jre = (ignoreBundleJre ? getJavaHomeDir() : execDir) + std::string("/jre/lib/amd64/server/libjvm.so");
     #else
-        std::string jre = execDir + std::string("/jre/lib/i386/server/libjvm.so");
+        std::string jre = (ignoreBundleJre ? getJavaHomeDir() : execDir) + std::string("/jre/lib/i386/server/libjvm.so");
     #endif
 
-    printf("jre: %s\n", jre.c_str());
+    printf("jre: %s%s\n", jre.c_str(), ignoreBundleJre ? " (using system JRE)" : "");
     
     void* handle = dlopen(jre.c_str(), RTLD_LAZY);
     if(handle == NULL) {

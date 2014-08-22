@@ -36,6 +36,10 @@ bool changeWorkingDir(std::string dir) {
     return _chdir(dir.c_str()) == 0;
 }
 
+std::string getJavaHomeDir() {
+    return ""; // unused
+}
+
 int g_argc;
 char** g_argv;
 
