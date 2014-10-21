@@ -110,12 +110,27 @@ void* launchVM(void* params) {
     JNIEnv* env = 0;
 
 #ifndef WINDOWS
+    std::string jre;
+
+    if (ignoreBundleJre) {
+        // with "--use-system-jre" (or on Mac OS 10.6),
+        // try to obtain JAVA_HOME
+        jre = getJavaHomeDir();
+        if (jre.length() == 0) {
+            ignoreBundleJre = false;
+        }
+    }
+
+    if (!ignoreBundleJre) {
+        jre = execDir;
+    }
+
     #ifdef MACOSX
-        std::string jre = (ignoreBundleJre ? getJavaHomeDir() : execDir) + std::string("/jre/lib/server/libjvm.dylib");
+        jre.append("/jre/lib/server/libjvm.dylib");
     #elif defined(__LP64__)
-        std::string jre = (ignoreBundleJre ? getJavaHomeDir() : execDir) + std::string("/jre/lib/amd64/server/libjvm.so");
+        jre.append("/jre/lib/amd64/server/libjvm.so");
     #else
-        std::string jre = (ignoreBundleJre ? getJavaHomeDir() : execDir) + std::string("/jre/lib/i386/server/libjvm.so");
+        jre.append("/jre/lib/i386/server/libjvm.so");
     #endif
 
     printf("jre: %s%s\n", jre.c_str(), ignoreBundleJre ? " (using system JRE)" : "");

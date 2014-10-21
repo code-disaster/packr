@@ -56,6 +56,23 @@ std::string getJavaHomeDir() {
         output.erase(pos, 1);
     }
 
+    if (output.length() == 0) {
+        printf("No $JAVA_HOME set, checking /usr/libexec/java_home\n");
+
+        fp = popen("/usr/libexec/java_home", "r");
+        if (fp == NULL) {
+            return std::string("");
+        }
+
+        while (fgets(buf, sizeof(buf) - 1, fp) != NULL) {
+            output.append(buf);
+        }
+
+        while ((pos = output.find("\n")) != std::string::npos) {
+            output.erase(pos, 1);
+        }
+    }
+
     printf("JAVA_HOME: %s\n", output.c_str());
 
     return output;
