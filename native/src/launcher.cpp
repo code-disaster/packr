@@ -94,9 +94,9 @@ void* launchVM(void* params) {
     printf("mainClass: %s\n", main.c_str());
     
     JavaVMOption* options = (JavaVMOption*)malloc(sizeof(JavaVMOption) * (1 + vmArgs.size()));
-    options[0].optionString = (char*)classPath.c_str();
+    options[0].optionString = strdup(classPath.c_str());
     for(unsigned i = 0; i < vmArgs.size(); i++) {
-        options[i+1].optionString = (char*)vmArgs[i].to_str().c_str();
+        options[i+1].optionString = strdup(vmArgs[i].to_str().c_str());
         printf("vmArg %d: %s\n", i, options[i+1].optionString);
     }
     
@@ -110,12 +110,27 @@ void* launchVM(void* params) {
     JNIEnv* env = 0;
 
 #ifndef WINDOWS
+    std::string jre;
+
+    if (ignoreBundleJre) {
+        // with "--use-system-jre" (or on Mac OS 10.6),
+        // try to obtain JAVA_HOME
+        jre = getJavaHomeDir();
+        if (jre.length() == 0) {
+            ignoreBundleJre = false;
+        }
+    }
+
+    if (!ignoreBundleJre) {
+        jre = execDir;
+    }
+
     #ifdef MACOSX
-        std::string jre = (ignoreBundleJre ? getJavaHomeDir() : execDir) + std::string("/jre/lib/server/libjvm.dylib");
+        jre.append("/jre/lib/server/libjvm.dylib");
     #elif defined(__LP64__)
-        std::string jre = (ignoreBundleJre ? getJavaHomeDir() : execDir) + std::string("/jre/lib/amd64/server/libjvm.so");
+        jre.append("/jre/lib/amd64/server/libjvm.so");
     #else
-        std::string jre = (ignoreBundleJre ? getJavaHomeDir() : execDir) + std::string("/jre/lib/i386/server/libjvm.so");
+        jre.append("/jre/lib/i386/server/libjvm.so");
     #endif
 
     printf("jre: %s%s\n", jre.c_str(), ignoreBundleJre ? " (using system JRE)" : "");
@@ -164,5 +179,10 @@ void* launchVM(void* params) {
     }
     env->CallStaticVoidMethod(mainClass, mainMethod, appArgs);
     jvm->DestroyJavaVM();
+
+    for(unsigned i = 0; i < vmArgs.size() + 1; i++) {
+        free(options[i].optionString);
+    }
+
     return 0;
 }
