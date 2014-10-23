@@ -126,7 +126,12 @@ void* launchVM(void* params) {
     }
 
     #ifdef MACOSX
-        jre.append("/jre/lib/server/libjvm.dylib");
+        // another "special case" for OS X 10.6 and the system JRE
+        if (jre.find("/1.6.0.jdk/Contents/Home") != std::string::npos) {
+            jre.append("/../Libraries/libjvm.dylib");
+        } else {
+            jre.append("/jre/lib/server/libjvm.dylib");
+        }
     #elif defined(__LP64__)
         jre.append("/jre/lib/amd64/server/libjvm.so");
     #else
