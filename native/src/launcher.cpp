@@ -130,7 +130,7 @@ void* launchVM(void* params) {
         if (jre.find("/1.6.0.jdk/Contents/Home") != std::string::npos) {
             jre.append("/../Libraries/libjvm.dylib");
         } else {
-            jre.append("/jre/lib/server/libjvm.dylib");
+            jre.append("/jre/lib/jli/libjli.dylib");
         }
     #elif defined(__LP64__)
         jre.append("/jre/lib/amd64/server/libjvm.so");
