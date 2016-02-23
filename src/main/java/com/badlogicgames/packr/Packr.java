@@ -62,8 +62,6 @@ public class Packr {
 
 		PackrReduce.minimizeJre(output, config);
 
-		PackrReduce.repackJarFiles(output, config);
-
 		PackrReduce.removePlatformLibs(output, config);
 
 		System.out.println("Done!");

@@ -42,7 +42,7 @@ public class PackrConfig {
 		Linux64("linux64"),
 		MacOS("mac");
 
-		private String desc;
+		final String desc;
 
 		Platform(String desc) {
 			this.desc = desc;
