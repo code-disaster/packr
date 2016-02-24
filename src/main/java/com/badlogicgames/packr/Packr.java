@@ -249,21 +249,23 @@ public class Packr {
 	}
 
 	private void copyResources(File output) throws IOException {
-		System.out.println("Copying resources ...");
+		if (config.resources != null) {
+			System.out.println("Copying resources ...");
 
-		for (File file : config.resources) {
-			if (!file.exists()) {
-				throw new IOException("Resource '" + file.getAbsolutePath() + "' doesn't exist");
-			}
+			for (File file : config.resources) {
+				if (!file.exists()) {
+					throw new IOException("Resource '" + file.getAbsolutePath() + "' doesn't exist");
+				}
 
-			if (file.isFile()) {
-				FileUtils.copyFile(file, new File(output, file.getName()));
-			}
+				if (file.isFile()) {
+					FileUtils.copyFile(file, new File(output, file.getName()));
+				}
 
-			if (file.isDirectory()) {
-				File target = new File(output, file.getName());
-				PackrFileUtils.mkdirs(target);
-				FileUtils.copyDirectory(file, target);
+				if (file.isDirectory()) {
+					File target = new File(output, file.getName());
+					PackrFileUtils.mkdirs(target);
+					FileUtils.copyDirectory(file, target);
+				}
 			}
 		}
 	}

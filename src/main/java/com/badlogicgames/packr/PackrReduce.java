@@ -37,10 +37,6 @@ class PackrReduce {
 
 		System.out.println("Minimizing JRE ...");
 
-		if (config.verbose) {
-			System.out.println("  # Removing executables ...");
-		}
-
 		JsonObject minimizeJson = readMinimizeProfile(config);
 		if (minimizeJson != null) {
 			if (config.verbose) {
@@ -54,7 +50,7 @@ class PackrReduce {
 
 				if (!file.exists()) {
 					if (config.verbose) {
-						System.out.println("  # No file or directory '" + file.getPath() + "' found, skipping ...");
+						System.out.println("  # No file or directory '" + file.getPath() + "' found, skipping");
 					}
 					continue;
 				}
@@ -170,7 +166,7 @@ class PackrReduce {
 
 	private static JsonObject readMinimizeProfile(PackrConfig config) throws IOException {
 
-		JsonObject json;
+		JsonObject json = null;
 
 		if (new File(config.minimizeJre).exists()) {
 			json = JsonObject.readFrom(FileUtils.readFileToString(new File(config.minimizeJre)));
@@ -178,9 +174,11 @@ class PackrReduce {
 			InputStream in = Packr.class.getResourceAsStream("/minimize/" + config.minimizeJre);
 			if (in != null) {
 				json = JsonObject.readFrom(new InputStreamReader(in));
-			} else {
-				json = null;
 			}
+		}
+
+		if (json == null && config.verbose) {
+			System.out.println("  # No minimize profile '" + config.minimizeJre + "' found");
 		}
 
 		return json;
