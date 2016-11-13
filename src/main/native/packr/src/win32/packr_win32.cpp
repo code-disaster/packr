@@ -31,37 +31,6 @@ static void waitAtExit(void) {
 	cin.get();
 }
 
-typedef enum _PROCESS_DPI_AWARENESS { 
-  PROCESS_DPI_UNAWARE            = 0,
-  PROCESS_SYSTEM_DPI_AWARE       = 1,
-  PROCESS_PER_MONITOR_DPI_AWARE  = 2
-} PROCESS_DPI_AWARENESS;
-
-static void setDPIAware() {
-	
-	typedef BOOL(WINAPI * SETPROCESSDPIAWARE_T)(void);
-    SETPROCESSDPIAWARE_T dpiAwareProc = 0;
-
-    typedef HRESULT(WINAPI * SETPROCESSDPIAWARENESS_T)(PROCESS_DPI_AWARENESS);
-    SETPROCESSDPIAWARENESS_T dpiAwarenessProc = 0;
-
-	HINSTANCE hUser32 = LoadLibraryA("user32.dll");
-    if (hUser32) {
-        dpiAwareProc = (SETPROCESSDPIAWARE_T) GetProcAddress(hUser32, "SetProcessDPIAware");
-    }
-
-    HINSTANCE hShCore = LoadLibraryA("shcore.dll");
-    if (hShCore) {
-        dpiAwarenessProc = (SETPROCESSDPIAWARENESS_T) GetProcAddress(hShCore, "SetProcessDpiAwareness");
-    }
-
-    if (dpiAwarenessProc) {
-        dpiAwarenessProc(PROCESS_SYSTEM_DPI_AWARE);
-    } else if (dpiAwareProc) {
-        dpiAwareProc();
-    }
-}
-
 static bool attachToConsole(int argc, char** argv) {
 
 	bool attach = false;
@@ -108,7 +77,6 @@ int CALLBACK WinMain(
 	int argc = __argc;
 	char** argv = __argv;
 
-	setDPIAware();
 	attachToConsole(argc, argv);
 
 	if (!setCmdLineArguments(argc, argv)) {
