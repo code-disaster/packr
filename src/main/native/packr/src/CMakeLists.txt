@@ -10,7 +10,7 @@ fips_files(packr.cpp packr.h)
 
 if (FIPS_WINDOWS)
     fips_dir(win32)
-    fips_files(packr_win32.cpp packr_win32.manifest)
+    fips_files(packr_win32.cpp packr_win32.manifest packr_win32.rc)
     if (FIPS_MSVC)
         set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /INCREMENTAL:no")
     endif()
