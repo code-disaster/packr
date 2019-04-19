@@ -6,7 +6,10 @@
 - Fixed crash when classpath is a directory. (#90)
 - Added "cachejre" option to cache results of JRE extract & minimize steps.
 - Added "removelibs" option to specify JAR files which are subject for removal of platform libraries. If this parameter isn't used, it defaults to a copy of "classpath", which is the old behaviour.
+- Added "libs" option. If specified, this denotes a folder, relative to "outdir", where platform libraries are copied/moved to during the "removelibs" phase.
 - Added NvOptimusEnablement and AmdPowerXpressRequestHighPerformance symbols. (#114)
+- Removed 32-bit support of MacOS binary.
+- Updated manifest of Windows binary to declare per-monitor DPI awareness on Windows 10.
 
 [2.0-SNAPSHOT and before]
 - Please check the Git log, or search the libGDX forums.
