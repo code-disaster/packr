@@ -9,6 +9,8 @@ include("${FIPS_ROOT_DIR}/cmake/fips.cmake")
 
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.7")
 
+project(packr)
+
 fips_setup()
 fips_project(packr-native)
 fips_add_subdirectory(src)
